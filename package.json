@@ -1,0 +1,19 @@
+{
+  "name": "threatlens",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w threatlens-api\" \"npm run dev -w threatlens-web\"",
+    "dev:api": "npm run dev -w threatlens-api",
+    "dev:web": "npm run dev -w threatlens-web",
+    "build": "npm run build -w threatlens-api && npm run build -w threatlens-web",
+    "db:generate": "npm run db:generate -w threatlens-api",
+    "db:push": "npm run db:push -w threatlens-api",
+    "db:seed": "npm run db:seed -w threatlens-api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

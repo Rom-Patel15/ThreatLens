@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OtpPurpose {
+  SIGNUP_VERIFY
+  LOGIN
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  emailVerified Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  threatScans  ThreatScan[]
+  activityLogs ActivityLog[]
+  riskScore    RiskScore?
+  otpChallenges OtpChallenge[]
+
+  @@index([email])
+}
+
+model OtpChallenge {
+  id          String     @id @default(cuid())
+  email       String
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose     OtpPurpose
+  codeHash    String
+  expiresAt   DateTime
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(5)
+  consumedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  lastSentAt  DateTime   @default(now())
+  ipAddress   String?
+
+  auditLogs OtpAuditLog[]
+
+  @@index([email, purpose, createdAt(sort: Desc)])
+  @@index([userId, consumedAt])
+}
+
+model OtpAuditLog {
+  id          String        @id @default(cuid())
+  challengeId String?
+  challenge   OtpChallenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+  email       String
+  userId      String?
+  event       String
+  metadata    Json?
+  ipAddress   String?
+  createdAt   DateTime      @default(now())
+
+  @@index([email, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum ScanType {
+  URL
+  EMAIL
+  MESSAGE
+  TEXT
+  WEBSITE_DESC
+}
+
+enum ScanStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model ThreatScan {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scanType  ScanType
+  rawInput  String     @db.Text
+  status    ScanStatus @default(COMPLETED)
+  createdAt DateTime   @default(now())
+
+  result ScanResult?
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model ScanResult {
+  id                       String     @id @default(cuid())
+  threatScanId             String     @unique
+  threatScan               ThreatScan @relation(fields: [threatScanId], references: [id], onDelete: Cascade)
+  scamProbability          Float
+  trustRiskLevel           String
+  confidenceScore          Float    @default(0)
+  attackClassifications    Json     @default("[]")
+  ruleSignals              Json
+  phishingIndicators       Json
+  manipulationIndicators   Json
+  keywordAnalysis          Json
+  recommendedActions       Json
+  aiExplanation            String?    @db.Text
+  aiManipulationSummary    String?    @db.Text
+  aiSeverityExplanation    String?    @db.Text
+  createdAt                DateTime   @default(now())
+
+  @@index([threatScanId])
+}
+
+
+model ThreatAlert {
+  id                  String   @id @default(cuid())
+  title               String
+  description         String   @db.Text
+  severity            String
+  category            String
+  source              String?
+  publishedAt         DateTime @default(now())
+  attackExplanation   String?  @db.Text
+  iocs                Json?
+  preventionTips      Json?
+  affectedIndustries  Json?
+  analystSummary      String?  @db.Text
+  relatedPatterns     Json?
+  timeline            Json?
+
+  @@index([publishedAt(sort: Desc)])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model RiskScore {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overallScore  Float
+  exposureIndex Float
+  threatIndex   Float
+  breakdown     Json
+  updatedAt     DateTime @updatedAt
+}

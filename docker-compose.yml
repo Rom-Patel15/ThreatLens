@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: threatlens
+      POSTGRES_PASSWORD: threatlens
+      POSTGRES_DB: threatlens
+    ports:
+      - "5432:5432"
+    volumes:
+      - threatlens_pg:/var/lib/postgresql/data
+
+volumes:
+  threatlens_pg:

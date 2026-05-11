@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-night-950 text-slate-100;
+    background-color: #08101a;
+    background-image:
+      radial-gradient(circle at top, rgba(21, 63, 84, 0.16), transparent 34%),
+      linear-gradient(180deg, rgba(8, 16, 26, 0.98), rgba(5, 9, 15, 1));
+  }
+}
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .glass {
+    @apply border border-slate-800 bg-slate-950 shadow-card;
+  }
+  .glass-strong {
+    @apply border border-slate-700 bg-night-900 shadow-card;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-slate-50 via-slate-200 to-slate-400 bg-clip-text text-transparent;
+  }
+}
